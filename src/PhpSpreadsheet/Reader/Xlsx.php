@@ -819,6 +819,23 @@ class Xlsx extends BaseReader
                                 $unparsedLoadedData = (new PageSetup($docSheet, $xmlSheet))->load($unparsedLoadedData);
                             }
 
+                            if (
+                                isset($xmlSheet->extLst, $xmlSheet->extLst->ext, $xmlSheet->extLst->ext['uri'])
+                                && $xmlSheet->extLst->ext['uri'] == "{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}"
+                            ) {
+                                if (!$xmlSheet->dataValidations) {
+                                    $xmlSheet->addChild('dataValidations');
+                                }
+                                foreach ($xmlSheet->extLst->ext->children('x14', TRUE)->dataValidations->dataValidation as $dataValidation) {
+                                    $node = $xmlSheet->dataValidations->addChild('dataValidation');
+                                    foreach ($dataValidation->attributes() as $attr) {
+                                        $node->addAttribute($attr->getName(), $attr);
+                                    }
+                                    $node->addAttribute('sqref', $dataValidation->children('xm', TRUE)->sqref);
+                                    $node->addChild('formula1', $dataValidation->formula1->children('xm', TRUE)->f);
+                                }
+                            }
+                            
                             if ($xmlSheet && $xmlSheet->dataValidations && !$this->readDataOnly) {
                                 (new DataValidations($docSheet, $xmlSheet))->load();
                             }
